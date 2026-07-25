@@ -4,6 +4,7 @@
 
 #include "brandubh_gs.h"
 #include "connect4_gs.h"
+#include "connect5_gs.h"
 #include "onitama_gs.h"
 #include "opentafl_gs.h"
 #include "photosynthesis_gs.h"
@@ -83,6 +84,7 @@ namespace py = pybind11;
       }))
 using brandubh_gs::BrandubhGS;
 using connect4_gs::Connect4GS;
+using connect5_gs::Connect5GS;
 using onitama_gs::OnitamaGS;
 using opentafl_gs::OpenTaflGS;
 using photosynthesis_gs::PhotosynthesisGS;
@@ -584,6 +586,34 @@ PYBIND11_MODULE(alphazero, m) {
       .def_static("CANONICAL_SHAPE",
                   [] { return connect4_gs::CANONICAL_SHAPE; })
       ADD_GS_PICKLE(Connect4GS);
+
+  py::class_<Connect5GS, GameState>(m, "Connect5GS")
+      .def(py::init<>())
+      .def(py::init(
+          [](const py::array_t<int8_t>& board, int8_t player, int32_t turn) {
+            if (board.ndim() != connect5_gs::BOARD_SHAPE.size() ||
+                board.shape(0) != connect5_gs::BOARD_SHAPE[0] ||
+                board.shape(1) != connect5_gs::BOARD_SHAPE[1] ||
+                board.shape(2) != connect5_gs::BOARD_SHAPE[2]) {
+              throw std::runtime_error{"Improper connect 5 board shape"};
+            }
+            auto np_unchecked = board.unchecked<3>();
+            auto tensor_board = connect5_gs::BoardTensor{};
+            for (auto i = 0; i < connect5_gs::BOARD_SHAPE[0]; ++i) {
+              for (auto j = 0; j < connect5_gs::BOARD_SHAPE[1]; ++j) {
+                for (auto k = 0; k < connect5_gs::BOARD_SHAPE[2]; ++k) {
+                  tensor_board(i, j, k) = np_unchecked(i, j, k);
+                }
+              }
+            }
+            return Connect5GS(tensor_board, player, turn);
+          }))
+      .def_static("NUM_PLAYERS", [] { return connect5_gs::NUM_PLAYERS; })
+      .def_static("NUM_MOVES", [] { return connect5_gs::NUM_MOVES; })
+      .def_static("NUM_SYMMETRIES", [] { return connect5_gs::NUM_SYMMETRIES; })
+      .def_static("CANONICAL_SHAPE",
+                  [] { return connect5_gs::CANONICAL_SHAPE; })
+      ADD_GS_PICKLE(Connect5GS);
 
   // Star Gambit support structs
   py::class_<UnitInfo>(m, "UnitInfo")

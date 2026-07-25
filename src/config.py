@@ -16,6 +16,7 @@ import alphazero
 
 GAME_REGISTRY = {
     "connect4": "Connect4GS",
+    "connect5": "Connect5GS",
     "onitama": "OnitamaGS",
     "brandubh": "BrandubhGS",
     "open_tafl": "OpenTaflGS",
