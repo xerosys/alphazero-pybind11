@@ -620,6 +620,11 @@ class NNWrapper:
                 # the unbounded re-recording cost for the long tail.
                 import torch._inductor.config as inductor_config
                 inductor_config.triton.cudagraph_skip_dynamic_graphs = True
+                # Cosmetic only: the warn_limit flag controls whether the
+                # "[__cudagraphs] ... N distinct sizes" message prints, not
+                # the recording behavior itself -- skip_dynamic_graphs above
+                # is what actually avoids the expensive re-recording cost.
+                inductor_config.triton.cudagraph_dynamic_shape_warn_limit = None
                 self.nnet = torch.compile(self.nnet, mode="reduce-overhead")
             except Exception:
                 pass  # graceful fallback
