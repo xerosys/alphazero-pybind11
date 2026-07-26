@@ -1,1 +1,9 @@
 game: connect5
+
+depth: 8
+channels: 128
+
+selfplay_mcts_visits: 250
+fast_mcts_visits: 62
+
+self_play_batch_size: 256
