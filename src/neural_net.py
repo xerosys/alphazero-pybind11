@@ -606,6 +606,20 @@ class NNWrapper:
                         )
                         self._apply_jit_and_cuda_graphs()
                         return
+                # mode="reduce-overhead" uses CUDA graphs, which record a
+                # separate graph per distinct input batch size. Self-play and
+                # arena naturally produce many different batch sizes as games
+                # complete asynchronously (a batch can be anywhere from a
+                # handful of games up to the full concurrent target), so
+                # without this, every new size triggers an expensive graph
+                # recording -- GPU utilization looks high but throughput
+                # collapses (measured: batched self-play dropped from ~500
+                # games/s to ~1 game/s after a couple hundred distinct sizes
+                # accumulated). Skipping graphs for less-common sizes keeps
+                # the CUDA-graph speedup for the common/repeated sizes without
+                # the unbounded re-recording cost for the long tail.
+                import torch._inductor.config as inductor_config
+                inductor_config.triton.cudagraph_skip_dynamic_graphs = True
                 self.nnet = torch.compile(self.nnet, mode="reduce-overhead")
             except Exception:
                 pass  # graceful fallback
